@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
 
 echo "hello"
-sleep 2s
+echo "waiting..."
+#sleep 10s
 echo "this script file works!"
+
+mkdir /mkdirTest
 
 exit 0

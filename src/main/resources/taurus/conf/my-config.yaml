@@ -1,0 +1,150 @@
+execution:
+  # all time format can be translated "seconds" unit. you can use readable unit like 's' for secounds, 'ms' for mili seconds, 'm' for minutes, 'h' for hours, 'd' for days.
+  - concurrency: 100
+    ramp-up: 30s
+    hold-for: 30s
+    # iterations: 1 # limit scenario iterations number
+    throughput: 2000 # apply RPS shaper, limiting maximum RPS to throughput, requires ramp-up and/or hold-for
+    # delay: 10s
+    # start-at: '2020-03-25 23:15'  # must be string YYYY-MM-DD HH:MM:SS, YYYY-MM-DD HH:MM, HH:MM:SS, HH:MM
+    # steps: # allows users to apply stepping ramp-up for concurrency and rps, requires ramp-up
+    scenario: air-offers
+    # env: environment variables
+    #   base_url: http://foo.bar/
+
+# Another way to execute something is asking for script
+# scenarios:
+#   with_script:
+#     script: some_special_file
+
+scenarios:
+  air-offers:
+    timeout: 30s
+    retrieve-resources: false
+    store-cache: false
+    store-cookie: false
+    # headers:
+    #   Content-Type: 'application/json'
+    #   User-Agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36'
+    requests:
+      - http://www.berith.co
+      # - https://epm.koreanair.com:7080
+      # - http://awsdc-nlb-pss-dev-api-52ee5d6efa773b5d.elb.ap-northeast-2.amazonaws.com:10000
+      # - url: '/api/rp/dx/search/air-offers'
+      #   method: POST
+      #   body:
+
+reporting:
+  - module: final-stats
+    summary: false  # overall samples count and percent of failures
+    percentiles: true  # display average times and percentiles
+    summary-labels: false # provides list of sample labels, status, percentage of completed, avg time and errors
+    failed-labels: false  # provides list of sample labels with failures
+    test-duration: true  # provides test duration
+    dump-xml: /result/reports/rslt-final-stats.xml
+    dump-csv: /result/reports/rslt-final-stats.csv
+    # label: rslt-final-stats
+  - module: console
+  - module: junit-xml
+    filename: /result/reports/rslt-junit.xml
+    data-source: sample-labels # 'sample-labels' or 'pass-fail'
+
+settings:
+  artifacts-dir: /result/artifacts # path where to save artifacts, default is %Y-%m-%d_%H-%M-%S.%f
+  # aggregator: consolidator
+  default-executor: jmeter
+  check-interval: 1s
+  # proxy:  # custom proxy settings
+  #   address: http://127.0.0.1:8080  # proxy server address
+  #   username: user  # username and password used if authentication is configured on proxy server
+  #   password: 12345
+  #   ssl-cert: path/to/cert  # SSL server-side certificate. You can set it to `false` to disable cert validation.
+  #   ssl-client-cert: path/to/cert  # SSL client-side certificate
+  check-updates: true  # check for newer version of Taurus on startup
+  verbose: false  # whenever you run bzt with -v option, it sets debug=true,
+    # some modules might use it for debug features,
+  # setting this through config also switches CLI verbosity
+  # env: # set environment variables, see below for more explanation
+  #   VARNAME1: VARVALUE1
+  #   VARNAME2: VARVALUE2
+
+provisioning: local
+
+services:
+  - module: monitoring
+    ~local:
+      - interval: 1s   # polling interval
+        logging: True # local monitoring logs will be saved to "local_monitoring_logs.csv" in the artifacts dir
+        metrics:
+          - cpu # total CPU usage %
+          - mem # total RAM usage %
+          - bytes-sent # network transfer rate
+          - bytes-recv # network transfer rate
+          - disk-read # disk I/O rate
+          - disk-write # disk I/O rate
+          - disk-space # % disk space used for artifacts storage
+          - engine-loop # Taurus "check loop" utilization, values higher than 1.0 means you should increase settings.check-interval
+          - conn-all # quantity of network connections
+    # server-agent:  # collect data from remote server which has ServerAgent running
+    # - address: 10.98.0.48:4444
+    #   label: target-server
+    #   interval: 1s
+    #   logging: true
+    #   metrics:
+    #   - cpu
+    #   - disks
+    #   - memory
+    #   - swap
+    #   - disks
+    #   - network
+    #   - tcp
+    #   # - tail
+    #   # - exec
+    #   # - jmx
+    # graphite:
+    # - address: 10.98.0.48
+    #   label: test_serv
+    #   interval: 1s
+    #   from: 100s
+    #   until: 1s
+    #   timeout: 2s
+    #   logging: True # those logs will be saved to "Graphitelogs_192.168.0.38.csv" in the artifacts dir
+    #   metrics:
+    #   - store.memUsage
+    #   - test.param1
+    #   - production.hardware.cpuUsage
+    #   - groupByNode(myserv_comp_org.cpu.?.cpu.*.value, 4, 'avg')
+    # - address: local_serv:2222
+    #   label: test_serv
+    #   metrics:
+    #   - production.hardware.cpuUsage
+    #   - groupByNode(myserv_comp_org.cpu.?.cpu.*.value, 4, 'avg')
+
+
+modules:
+  jmeter:
+    gui: false  # set it to true to open JMeter GUI instead of running non-GUI test
+    # local:
+    # sequential: ture # false by default, true is same as capacity: 1, USE ONLY sequential or capacity at the same time to prevent ambiguity
+    # capacity: 2  # no limit by default
+  # consolidator:
+  #   generalize-labels: 500    # support up to this number of labels
+  #   ignore-labels: # sample labels starting with prefixes from this list
+  #     - ignore     # will be ignored by results reader (eg ignore_myrequest)
+  #
+  #   buffer-scale-choice: 0.5  # choose middle value from following percentiles list (95.0)
+  #   buffer-multiplier: 2  # make buffer two times bigger than need to receive 95% samples
+  #   min-buffer-len: 2s      # minimal length of buffer (default: 2s)
+  #   max-buffer-len: 2h      # maximal length of buffer (default: infinity)
+  #
+  #   histogram-initial: 5s         # starting size of histograms to use, before auto-grow (default: 5s)
+  #   max-error-variety: 100  # max count of different error messages accepted (default: 100)
+  #
+  #   percentiles:  # percentile levels to track, # 0 also means min, 100 also means max
+  #     - 0.0
+  #     - 50.0
+  #     - 90.0
+  #     - 95.0
+  #     - 99.0
+  #     - 99.9
+  #     - 100.0

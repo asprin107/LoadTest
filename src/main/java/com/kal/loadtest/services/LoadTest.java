@@ -1,15 +1,13 @@
 package com.kal.loadtest.services;
 
-import org.springframework.stereotype.Service;
-
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
 
 public interface LoadTest {
     /**
      * Start Load Test.
-     * @return
      */
-    public String runLoadTest() throws IOException, InterruptedException;
+    public void runLoadTest() throws IOException, InterruptedException, ExecutionException;
 
     /**
      * Terminate Load Test Server.
